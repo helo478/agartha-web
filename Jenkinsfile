@@ -1,20 +1,34 @@
+#!groovy
+
 pipeline {
     agent any
 
     stages {
         stage('Build') {
             steps {
-                echo 'Building..'
+                sh '''
+			echo 'BuildingX..'
+			ls -l
+			mvn -f service/pom.xml compile
+		'''
             }
         }
         stage('Test') {
             steps {
-                echo 'Testing..'
+		sh '''
+                	echo 'TestingX..'
+			ls -l
+			mvn -f service/pom.xml test
+		'''
             }
         }
         stage('Deploy') {
             steps {
-                echo 'Deploying....'
+		sh '''
+                	echo 'DeployingX....'
+			ls -l
+			mvn -f service/pom.xml package
+		'''
             }
         }
     }
