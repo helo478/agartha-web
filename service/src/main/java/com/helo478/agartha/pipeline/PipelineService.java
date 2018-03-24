@@ -13,46 +13,50 @@ import com.helo478.agartha.pipeline.jenkins.JenkinsConfiguration;
 import com.helo478.agartha.pipeline.jenkins.JenkinsException;
 import com.helo478.agartha.pipeline.jenkins.JenkinsProxy;
 import com.helo478.agartha.pipeline.kubernetes.KubernetesProxy;
+import com.helo478.agartha.pipeline.model.NewPipelineRequest;
 
 @Service
 public class PipelineService {
-	
-	private static final Logger logger = LoggerFactory.getLogger(PipelineService.class); 
-	
+
+	private static final Logger logger = LoggerFactory.getLogger(PipelineService.class);
+
 	@Autowired
 	private GithubProxy github;
-	
+
 	@Autowired
 	private JenkinsProxy jenkins;
-	
-	@Autowired
-	private DockerHubProxy dockerHub;
-	
-	@Autowired
-	private KubernetesProxy kubernetes;
-	
-	public void createPipeline(final GithubConfiguration githubConfiguration, final JenkinsConfiguration jenkinsConfiguration, final String newPipelineName) {
-		
+
+	// @Autowired
+	// private DockerHubProxy dockerHub;
+
+	// @Autowired
+	// private KubernetesProxy kubernetes;
+
+	public void createPipeline(final GithubConfiguration githubConfiguration,
+			final JenkinsConfiguration jenkinsConfiguration, final NewPipelineRequest newPipelineRequest) {
+
 		try {
+
+			github.createRepository(githubConfiguration, newPipelineRequest.getPipelineName());
+			jenkins.createMultibranchPipelineJob(jenkinsConfiguration, newPipelineRequest.getPipelineName());
 			
-			github.createRepository(githubConfiguration, newPipelineName);
-			jenkins.createMultibranchPipelineJob(jenkinsConfiguration, newPipelineName);
-		}
-		catch (final GithubException e) {
+		} catch (final GithubException e) {
+
+			logger.error("createPipeline (newPipelineName: {}) :: GithubException: {}",
+					newPipelineRequest.getPipelineName(), e.getMessage());
 			
-			logger.error("createPipeline (newPipelineName: {}) :: GithubException: {}", newPipelineName, e.getMessage());
-		}
-		catch (final JenkinsException e) {
-			
-			logger.error("createPipeline (newPipelineName: {}) :: JenkinsException: {}; rolling back github creation", newPipelineName, e.getMessage());
-			
+		} catch (final JenkinsException e) {
+
+			logger.error("createPipeline (newPipelineName: {}) :: JenkinsException: {}; rolling back github creation",
+					newPipelineRequest.getPipelineName(), e.getMessage());
+
 			try {
-				
-				github.deleteRepository(githubConfiguration, newPipelineName);
-			}
-			catch (final GithubException e1) {
-				
-				logger.error("createPipeline (newPipelineName: {}) :: JenkinsException :: GithubException: {}", newPipelineName, e1.getMessage());
+
+				github.deleteRepository(githubConfiguration, newPipelineRequest.getPipelineName());
+			} catch (final GithubException e1) {
+
+				logger.error("createPipeline (newPipelineName: {}) :: JenkinsException :: GithubException: {}",
+						newPipelineRequest.getPipelineName(), e1.getMessage());
 			}
 		}
 	}
