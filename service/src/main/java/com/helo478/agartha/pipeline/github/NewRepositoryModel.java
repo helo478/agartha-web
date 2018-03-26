@@ -10,13 +10,13 @@ public class NewRepositoryModel {
     private String name;
     
     @JsonProperty("auto_init")
-    private final boolean autoInit = true;
+    private final boolean autoInit = false;
     
     @JsonProperty("private")
     private final boolean isPrivate = false;
     
-    @JsonProperty("gitignore_template")
-    private final String gitignoreTemplate = "nanoc";
+//    @JsonProperty("gitignore_template")
+//    private final String gitignoreTemplate = "nanoc";
     
     public static NewRepositoryModel of(final String name) {
     	
@@ -45,8 +45,8 @@ public class NewRepositoryModel {
 		return isPrivate;
 	}
 
-	public String getGitignore_template() {
-		return gitignoreTemplate;
-	}
+//	public String getGitignore_template() {
+//		return gitignoreTemplate;
+//	}
 
 }
