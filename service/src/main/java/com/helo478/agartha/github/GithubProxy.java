@@ -1,4 +1,4 @@
-package com.helo478.agartha.pipeline.github;
+package com.helo478.agartha.github;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -28,7 +28,7 @@ public class GithubProxy {
 	@Autowired
 	private RestTemplate restTemplate;
 
-	public GithubPipelineConfiguration createRepository(final GithubConfiguration githubConfiguration,
+	public GithubPipelineConfigurationModel createRepository(final GithubConfigurationModel githubConfiguration,
 			final String newRepositoryName) throws GithubException {
 
 		final String url = String.format("%s/%s", API_ROOT, REPOSITORY_PATH);
@@ -46,7 +46,7 @@ public class GithubProxy {
 
 			if (response.getStatusCode().is2xxSuccessful()) {
 
-				final GithubPipelineConfiguration githubPipelineConfiguration = new GithubPipelineConfiguration();
+				final GithubPipelineConfigurationModel githubPipelineConfiguration = new GithubPipelineConfigurationModel();
 				githubPipelineConfiguration.setGithubConfiguration(githubConfiguration);
 				githubPipelineConfiguration.setRepositoryName(newRepositoryName);
 				return githubPipelineConfiguration;
@@ -68,7 +68,7 @@ public class GithubProxy {
 		}
 	}
 
-	public void deleteRepository(GithubConfiguration githubConfiguration, String repositoryToDeleteName)
+	public void deleteRepository(GithubConfigurationModel githubConfiguration, String repositoryToDeleteName)
 			throws GithubException {
 		
 		logger.trace("deleteRepository :: entering: {}, {}", githubConfiguration, repositoryToDeleteName);
@@ -103,7 +103,7 @@ public class GithubProxy {
 		logger.trace("deleteRepository :: returning");
 	}
 	
-	private String getBasicAuthHeaderValue(final GithubConfiguration githubConfiguration) {
+	private String getBasicAuthHeaderValue(final GithubConfigurationModel githubConfiguration) {
 
 		final GithubCredentials credentials = githubConfiguration.getCredentials();
 		final byte[] encodedAuth = Base64

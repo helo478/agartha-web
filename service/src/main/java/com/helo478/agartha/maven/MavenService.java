@@ -1,4 +1,4 @@
-package com.helo478.agartha.pipeline.maven;
+package com.helo478.agartha.maven;
 
 import java.io.File;
 import java.util.ArrayList;

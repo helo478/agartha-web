@@ -9,6 +9,11 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.helo478.agartha.github.GithubConfigurationModel;
+import com.helo478.agartha.github.GithubCredentials;
+import com.helo478.agartha.github.GithubException;
+import com.helo478.agartha.github.GithubProxy;
+import com.helo478.agartha.github.NewRepositoryModel;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
@@ -40,7 +45,7 @@ public class GithubProxyTest {
 		credentials.setUserName(githubUser);
 		credentials.setPassword(githubPassword);
 
-		final GithubConfiguration githubConfiguration = new GithubConfiguration();
+		final GithubConfigurationModel githubConfiguration = new GithubConfigurationModel();
 		githubConfiguration.setCredentials(credentials);
 
 		sut.createRepository(githubConfiguration, "SpamAndEggs");
@@ -53,7 +58,7 @@ public class GithubProxyTest {
 		credentials.setUserName(githubUser);
 		credentials.setPassword(githubPassword);
 
-		final GithubConfiguration githubConfiguration = new GithubConfiguration();
+		final GithubConfigurationModel githubConfiguration = new GithubConfigurationModel();
 		githubConfiguration.setCredentials(credentials);
 
 		sut.deleteRepository(githubConfiguration, "SpamAndEggs");

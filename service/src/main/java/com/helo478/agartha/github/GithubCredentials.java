@@ -1,19 +1,15 @@
-package com.helo478.agartha.pipeline.github;
+package com.helo478.agartha.github;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
+import javax.persistence.Column;
+import javax.persistence.Embeddable;
 
-@Entity
+@Embeddable
 public class GithubCredentials {
 
-	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
-	private long id;
-
+	@Column(name = "github_user_name")
 	private String userName;
 
+	@Column(name = "github_password")
 	private String password;
 
 	public String getUserName() {

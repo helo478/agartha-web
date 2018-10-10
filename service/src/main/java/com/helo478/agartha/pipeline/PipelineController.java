@@ -1,4 +1,4 @@
-package com.helo478.agartha;
+package com.helo478.agartha.pipeline;
 
 import javax.annotation.PostConstruct;
 
@@ -12,12 +12,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.helo478.agartha.pipeline.PipelineException;
-import com.helo478.agartha.pipeline.PipelineService;
-import com.helo478.agartha.pipeline.github.GithubConfiguration;
-import com.helo478.agartha.pipeline.github.GithubCredentials;
-import com.helo478.agartha.pipeline.jenkins.JenkinsConfiguration;
-import com.helo478.agartha.pipeline.model.NewPipelineRequest;
+import com.helo478.agartha.github.GithubConfigurationModel;
+import com.helo478.agartha.github.GithubCredentials;
+import com.helo478.agartha.jenkins.JenkinsConfigurationModel;
 
 @RestController
 @RequestMapping("/pipeline")
@@ -25,9 +22,9 @@ public class PipelineController {
 	
 	private static final Logger logger = LoggerFactory.getLogger(PipelineController.class);
 	
-	private GithubConfiguration githubConfiguration;
+	private GithubConfigurationModel githubConfiguration;
 	
-	private JenkinsConfiguration jenkinsConfiguration;
+	private JenkinsConfigurationModel jenkinsConfiguration;
 	
 	@Value("${GITHUB_USER}")
 	private String githubUser;
@@ -35,12 +32,19 @@ public class PipelineController {
 	@Value("${GITHUB_PASSWORD}")
 	private String githubPassword;
 	
+	@Value("${JENKINS_HOST_AND_PORT}")
+	private String jenkinsHostAndPort;
+	
+	@Autowired
+	private PipelineService pipelineService;
+	
 	@PostConstruct
 	public void logValues() {
 		
 		logger.trace("logValues :: entering");
 		logger.info("logValues :: githubUser: {}", githubUser);
-		logger.info("logValues :: githubPassword: {}", githubPassword);
+		logger.info("logValues :: githubPassword: {}", githubPassword.replaceAll(".",  "*"));
+		logger.info("logValues :: jenkinsHostAndPort: {}", jenkinsHostAndPort);
 		logger.trace("logVAlues :: returning");
 	}
 	
@@ -51,19 +55,17 @@ public class PipelineController {
 		githubCredentials.setUserName(githubUser);
 		githubCredentials.setPassword(githubPassword);
 		
-		githubConfiguration = new GithubConfiguration();
+		githubConfiguration = new GithubConfigurationModel();
 		githubConfiguration.setCredentials(githubCredentials);
 		
-		jenkinsConfiguration = new JenkinsConfiguration();
+		jenkinsConfiguration = new JenkinsConfigurationModel();
+		jenkinsConfiguration.setHostAndPort(jenkinsHostAndPort);
 	}
-	
-	@Autowired
-	private PipelineService pipelineService;
 
 	@PostMapping
 	public ResponseEntity<Void> postPipeline(final @RequestBody NewPipelineRequest newPipelineRequest) {
 		
-		System.out.println("Received Foo: " + newPipelineRequest);
+		logger.debug("postPipeline :: entering({}) ", newPipelineRequest);
 		
 		try {
 			pipelineService.createPipeline(githubConfiguration, jenkinsConfiguration, newPipelineRequest);
@@ -72,10 +74,8 @@ public class PipelineController {
 		catch (final PipelineException e) {
 			
 			logger.error("postPipeline ({}) :: PipelineException: {}", newPipelineRequest, e.getMessage(), e);
-
 			return ResponseEntity.badRequest().build();
 		}
-		
 	}
 	
 }

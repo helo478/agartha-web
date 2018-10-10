@@ -1,4 +1,4 @@
-package com.helo478.agartha.pipeline.git;
+package com.helo478.agartha.git;
 
 public class GitException extends Exception {
 

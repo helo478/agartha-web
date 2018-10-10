@@ -1,4 +1,4 @@
-package com.helo478.agartha.pipeline.kubernetes;
+package com.helo478.agartha.kubernetes;
 
 import org.springframework.stereotype.Component;
 

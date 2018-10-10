@@ -1,4 +1,4 @@
-package com.helo478.agartha.pipeline.dockerhub;
+package com.helo478.agartha.dockerhub;
 
 import org.springframework.stereotype.Component;
 

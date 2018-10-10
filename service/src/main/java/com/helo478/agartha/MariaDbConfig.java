@@ -18,14 +18,23 @@ public class MariaDbConfig {
 	@Value("${DB_USER}")
 	private String dbUser;
 
-	@Value("${DB_PASSWORD}")
+	@Value("${DB_PWD}")
 	private String dbPassword;
+	
+	@Value("${DB_URL}")
+	private String dbUrl;
+	
+	@Value("${DB_SCHEMA}")
+	private String dbSchema;
+	
+	@Value("${DB_DRIVER:com.mysql.jdbc.Driver}")
+	private String dbDriver;
 
 	@PostConstruct
 	public void logValues() {
 	
 		logger.info("DB_USER: {}", dbUser);
-		logger.info("DB_PASSWORD (redacted): {}", dbPassword.replaceAll(".", "*"));
+		logger.info("DB_PWD (redacted): {}", dbPassword.replaceAll(".", "*"));
 	}
 
 	@Bean
@@ -35,8 +44,8 @@ public class MariaDbConfig {
 		        .create()
 		        .username(dbUser)
 		        .password(dbPassword)
-		        .url("jdbc:mysql://localhost/agartha")
-		        .driverClassName("com.mysql.jdbc.Driver")
+		        .url(dbUrl + "/" + dbSchema)
+		        .driverClassName(dbDriver)
 		        .build(); //@formatter:on
 	}
 

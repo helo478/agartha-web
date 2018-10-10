@@ -1,32 +1,33 @@
-package com.helo478.agartha.pipeline.jenkins;
+package com.helo478.agartha.maven;
 
-public class JenkinsException extends Exception {
+public class MavenException extends Exception {
 
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
 
-	public JenkinsException() {
+	public MavenException() {
 		// TODO Auto-generated constructor stub
 	}
 
-	public JenkinsException(String message) {
+	public MavenException(String message) {
 		super(message);
 		// TODO Auto-generated constructor stub
 	}
 
-	public JenkinsException(Throwable cause) {
+	public MavenException(Throwable cause) {
 		super(cause);
 		// TODO Auto-generated constructor stub
 	}
 
-	public JenkinsException(String message, Throwable cause) {
+	public MavenException(String message, Throwable cause) {
 		super(message, cause);
 		// TODO Auto-generated constructor stub
 	}
 
-	public JenkinsException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
+	public MavenException(String message, Throwable cause, boolean enableSuppression,
+			boolean writableStackTrace) {
 		super(message, cause, enableSuppression, writableStackTrace);
 		// TODO Auto-generated constructor stub
 	}

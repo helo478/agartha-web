@@ -1,4 +1,4 @@
-package com.helo478.agartha.pipeline.model;
+package com.helo478.agartha.pipeline;
 
 public class NewPipelineRequest {
 
