@@ -8,6 +8,9 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
+import javax.persistence.Transient;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @Table(name = "jenkins_pipeline_configuration")
@@ -20,9 +23,14 @@ public class JenkinsPipelineConfigurationModel {
 
 	@Column(name = "jenkins_job_name")
 	private String jobName;
+	
+	@Column(name = "jenkins_configuration_id")
+	private int jenkinsConfigurationId;
 
 	@ManyToOne
 	@JoinColumn(name = "jenkins_configuration_id", referencedColumnName = "jenkins_configuration_id")
+	@JsonIgnore
+	@Transient
 	private JenkinsConfigurationModel jenkinsConfiguration;
 
 	public int getId() {
@@ -39,6 +47,14 @@ public class JenkinsPipelineConfigurationModel {
 
 	public void setJobName(String jobName) {
 		this.jobName = jobName;
+	}
+
+	public int getJenkinsConfigurationId() {
+		return jenkinsConfigurationId;
+	}
+
+	public void setJenkinsConfigurationId(int jenkinsConfigurationId) {
+		this.jenkinsConfigurationId = jenkinsConfigurationId;
 	}
 
 	public JenkinsConfigurationModel getJenkinsConfiguration() {

@@ -7,6 +7,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.text.StrSubstitutor;
@@ -40,7 +41,8 @@ public class JenkinsProxy {
 	@Autowired
 	private RestTemplate restTemplate;
 
-	public JenkinsPipelineConfigurationModel createMultibranchPipelineJob(final JenkinsConfigurationModel jenkinsConfiguration,
+	public JenkinsPipelineConfigurationModel createMultibranchPipelineJob(
+			final JenkinsConfigurationModel jenkinsConfiguration,
 			final GithubPipelineConfigurationModel githubPipelineConfiguration, final String newJobName)
 			throws JenkinsException {
 
@@ -77,13 +79,14 @@ public class JenkinsProxy {
 		}
 
 		final JenkinsPipelineConfigurationModel jenkinsPipelineConfiguration = new JenkinsPipelineConfigurationModel();
-		jenkinsPipelineConfiguration.setJenkinsConfiguration(jenkinsConfiguration);
+		// jenkinsPipelineConfiguration.setJenkinsConfiguration(jenkinsConfiguration);
 		jenkinsPipelineConfiguration.setJobName(newJobName);
 		return jenkinsPipelineConfiguration;
 	}
 
-	private void scanRepository(String user, String token, String hostAndPort, String newJobName, final String crumb) throws URISyntaxException {
-		
+	private void scanRepository(String user, String token, String hostAndPort, String newJobName, final String crumb)
+			throws URISyntaxException {
+
 		final URI createMultibranchPipelineJobUri = new URI(
 				String.format(JENKINS_AUTHENTICATED_URL_ROOT, user, token, hostAndPort)
 						+ String.format(JENKINS_SCAN_REPOSITORY_PATH, newJobName));
@@ -99,8 +102,8 @@ public class JenkinsProxy {
 		restTemplate.exchange(request, String.class);
 	}
 
-	private void createJob(final String newJobName, final String user, final String token,
-			final String hostAndPort, final String body, String crumb) throws URISyntaxException {
+	private void createJob(final String newJobName, final String user, final String token, final String hostAndPort,
+			final String body, String crumb) throws URISyntaxException {
 
 		final URI createMultibranchPipelineJobUri = new URI(
 				String.format(JENKINS_AUTHENTICATED_URL_ROOT, user, token, hostAndPort)
@@ -130,9 +133,9 @@ public class JenkinsProxy {
 
 		return response.getBody().crumb;
 	}
-	
+
 	private String getBasicAuthorization(final String user, final String token) {
-		
+
 		String encodeBase64String = Base64.encodeBase64String(String.format("%s:%s", user, token).getBytes());
 		return String.format("Basic %s", encodeBase64String);
 	}
@@ -170,6 +173,11 @@ public class JenkinsProxy {
 
 		@SuppressWarnings("unused")
 		public String crumbRequestField;
+	}
+
+	public boolean existsJob(JenkinsConfigurationModel jenkinsConfigurationModel, String pipelineName)
+			throws JenkinsException {
+		throw new RuntimeException("Not yet implemented"); // TODO: implement
 	}
 
 }

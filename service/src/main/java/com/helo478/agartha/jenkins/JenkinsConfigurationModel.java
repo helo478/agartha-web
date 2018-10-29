@@ -8,8 +8,6 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
 @Entity
 @Table(name = "jenkins_configuration")
 public class JenkinsConfigurationModel {
@@ -18,13 +16,12 @@ public class JenkinsConfigurationModel {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "jenkins_configuration_id")
 	private int id;
-	
+
 	@Column(name = "jenkins_host_and_port")
 	private String hostAndPort;
-	
+
 	@Embedded
-	@JsonIgnore
-	private JenkinsCredentials jenkinsCredentials;
+	private JenkinsCredentialsModel jenkinsCredentials;
 
 	public int getId() {
 		return id;
@@ -42,11 +39,11 @@ public class JenkinsConfigurationModel {
 		this.hostAndPort = hostAndPort;
 	}
 
-	public JenkinsCredentials getJenkinsCredentials() {
+	public JenkinsCredentialsModel getJenkinsCredentials() {
 		return jenkinsCredentials;
 	}
 
-	public void setJenkinsCredentials(final JenkinsCredentials jenkinsCredentials) {
+	public void setJenkinsCredentials(final JenkinsCredentialsModel jenkinsCredentials) {
 		this.jenkinsCredentials = jenkinsCredentials;
 	}
 

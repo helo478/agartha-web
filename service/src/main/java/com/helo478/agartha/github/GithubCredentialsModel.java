@@ -4,7 +4,7 @@ import javax.persistence.Column;
 import javax.persistence.Embeddable;
 
 @Embeddable
-public class GithubCredentials {
+public class GithubCredentialsModel {
 
 	@Column(name = "github_user_name")
 	private String userName;

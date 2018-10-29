@@ -49,18 +49,21 @@ public class GithubProxy {
 				final GithubPipelineConfigurationModel githubPipelineConfiguration = new GithubPipelineConfigurationModel();
 				githubPipelineConfiguration.setGithubConfiguration(githubConfiguration);
 				githubPipelineConfiguration.setRepositoryName(newRepositoryName);
+				githubPipelineConfiguration.setGithubConfigurationId(githubConfiguration.getId());
 				return githubPipelineConfiguration;
 			}
 
 			throw new RuntimeException("Unhandled error case for response status: " + response.getStatusCodeValue());
 
-		} catch (final URISyntaxException e) {
+		}
+		catch (final URISyntaxException e) {
 
 			logger.error("createRepository :: URISyntaxException");
 
 			throw new RuntimeException("Unhandled exception", e);
 
-		} catch (final RestClientException e) {
+		}
+		catch (final RestClientException e) {
 
 			logger.error("RestClientException: {}", e.getMessage());
 
@@ -70,7 +73,7 @@ public class GithubProxy {
 
 	public void deleteRepository(GithubConfigurationModel githubConfiguration, String repositoryToDeleteName)
 			throws GithubException {
-		
+
 		logger.trace("deleteRepository :: entering: {}, {}", githubConfiguration, repositoryToDeleteName);
 
 		final String userName = githubConfiguration.getCredentials().getUserName();
@@ -87,32 +90,76 @@ public class GithubProxy {
 
 			restTemplate.exchange(request, String.class);
 
-		} catch (final URISyntaxException e) {
+		}
+		catch (final URISyntaxException e) {
 
 			logger.error("deleteRepository :: URISyntaxException");
 
 			throw new RuntimeException("Unhandled exception", e);
 
-		} catch (final RestClientException e) {
+		}
+		catch (final RestClientException e) {
 
 			logger.error("deleteRepository :: RestClientException: {}", e.getMessage());
 
 			throw new GithubException("Unhandled HTTP problem", e);
 		}
-		
+
 		logger.trace("deleteRepository :: returning");
 	}
-	
+
+	public boolean existsRepository(GithubConfigurationModel githubConfiguration, String repositoryName)
+			throws GithubException {
+
+		logger.trace("existsRepository :: entering({}, {})", githubConfiguration, repositoryName);
+
+		final String userName = githubConfiguration.getCredentials().getUserName();
+		final String url = String.format("%s/repos/%s/%s", API_ROOT, userName, repositoryName);
+
+		logger.info("existsRepository (repositoryName: {}) :: url: {}", repositoryName, url);
+
+		MultiValueMap<String, String> headers = new LinkedMultiValueMap<>();
+		headers.add("Authorization", getBasicAuthHeaderValue(githubConfiguration));
+
+		try {
+			final RequestEntity<NewRepositoryModel> request = new RequestEntity<NewRepositoryModel>(
+					NewRepositoryModel.of(repositoryName), headers, HttpMethod.GET, new URI(url));
+
+			final ResponseEntity<String> response = restTemplate.exchange(request, String.class);
+
+			if (response.getStatusCode().is2xxSuccessful()) {
+				return true;
+			}
+			else {
+				return false;
+			}
+
+		}
+		catch (final URISyntaxException e) {
+
+			logger.error("existsRepository :: URISyntaxException");
+
+			throw new RuntimeException("Unhandled exception", e);
+
+		}
+		catch (final RestClientException e) {
+
+			logger.error("existsRepository :: RestClientException: {}", e.getMessage());
+
+			throw new GithubException("Unhandled HTTP problem", e);
+		}
+	}
+
 	private String getBasicAuthHeaderValue(final GithubConfigurationModel githubConfiguration) {
 
-		final GithubCredentials credentials = githubConfiguration.getCredentials();
+		final GithubCredentialsModel credentials = githubConfiguration.getCredentials();
 		final byte[] encodedAuth = Base64
 				.encodeBase64(String.format("%s:%s", credentials.getUserName(), credentials.getPassword()).getBytes());
 
 		String authHeader = "Basic " + new String(encodedAuth);
-		
+
 		return authHeader;
-		
+
 	}
 
 }

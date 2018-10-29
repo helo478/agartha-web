@@ -1,11 +1,11 @@
 package com.helo478.agartha.pipeline;
 
-import com.helo478.agartha.github.GithubConfigurationModel;
-import com.helo478.agartha.jenkins.JenkinsConfigurationModel;
+import com.helo478.agartha.github.GithubException;
+import com.helo478.agartha.jenkins.JenkinsException;
 
 public interface PipelineService {
 
-	void createPipeline(GithubConfigurationModel githubConfiguration, JenkinsConfigurationModel jenkinsConfiguration,
-			NewPipelineRequest newPipelineRequest) throws PipelineException;
+	void createPipeline(NewPipelineRequest newPipelineRequest)
+			throws GithubException, JenkinsException, PipelineException;
 
 }

@@ -4,7 +4,7 @@ import javax.persistence.Column;
 import javax.persistence.Embeddable;
 
 @Embeddable
-public class JenkinsCredentials {
+public class JenkinsCredentialsModel {
 
 	@Column(name = "jenkins_user_name")
 	private String userName;

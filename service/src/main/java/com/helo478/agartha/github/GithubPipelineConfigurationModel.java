@@ -8,11 +8,13 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 
 import org.eclipse.jgit.transport.CredentialsProvider;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.springframework.util.StringUtils;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.helo478.agartha.git.JgitCredentialsProvider;
 
 @Entity
@@ -26,9 +28,14 @@ public class GithubPipelineConfigurationModel implements JgitCredentialsProvider
 
 	@Column(name = "github_repository_name")
 	private String repositoryName;
+	
+	@Column(name = "github_configuration_id")
+	private int githubConfigurationId;
 
 	@ManyToOne
 	@JoinColumn(name = "github_configuration_id", referencedColumnName = "github_configuration_id")
+	@JsonIgnore
+	@Transient
 	private GithubConfigurationModel githubConfiguration;
 
 	public int getId() {
@@ -53,6 +60,14 @@ public class GithubPipelineConfigurationModel implements JgitCredentialsProvider
 
 	public void setGithubConfiguration(GithubConfigurationModel githubConfiguration) {
 		this.githubConfiguration = githubConfiguration;
+	}
+
+	public int getGithubConfigurationId() {
+		return githubConfigurationId;
+	}
+
+	public void setGithubConfigurationId(int githubConfigurationId) {
+		this.githubConfigurationId = githubConfigurationId;
 	}
 
 	@Override

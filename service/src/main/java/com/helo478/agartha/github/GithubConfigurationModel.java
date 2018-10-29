@@ -8,8 +8,6 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
 @Entity
 @Table(name = "github_configuration")
 public class GithubConfigurationModel {
@@ -20,8 +18,7 @@ public class GithubConfigurationModel {
 	private int id;
 
 	@Embedded
-	@JsonIgnore
-	private GithubCredentials credentials;
+	private GithubCredentialsModel credentials;
 
 	public int getId() {
 		return id;
@@ -31,11 +28,11 @@ public class GithubConfigurationModel {
 		this.id = id;
 	}
 
-	public GithubCredentials getCredentials() {
+	public GithubCredentialsModel getCredentials() {
 		return credentials;
 	}
 
-	public void setCredentials(GithubCredentials credentials) {
+	public void setCredentials(GithubCredentialsModel credentials) {
 		this.credentials = credentials;
 	}
 

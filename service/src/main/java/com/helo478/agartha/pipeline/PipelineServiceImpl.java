@@ -1,6 +1,7 @@
 package com.helo478.agartha.pipeline;
 
 import java.io.File;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,11 +13,14 @@ import org.springframework.util.StringUtils;
 import com.helo478.agartha.git.GitException;
 import com.helo478.agartha.git.GitService;
 import com.helo478.agartha.github.GithubConfigurationModel;
+import com.helo478.agartha.github.GithubConfigurationRepository;
 import com.helo478.agartha.github.GithubException;
 import com.helo478.agartha.github.GithubPipelineConfigurationModel;
 import com.helo478.agartha.github.GithubProxy;
 import com.helo478.agartha.jenkins.JenkinsConfigurationModel;
+import com.helo478.agartha.jenkins.JenkinsConfigurationRepository;
 import com.helo478.agartha.jenkins.JenkinsException;
+import com.helo478.agartha.jenkins.JenkinsPipelineConfigurationModel;
 import com.helo478.agartha.jenkins.JenkinsProxy;
 import com.helo478.agartha.maven.MavenException;
 import com.helo478.agartha.maven.MavenService;
@@ -42,111 +46,117 @@ public class PipelineServiceImpl implements PipelineService {
 	private JenkinsProxy jenkins;
 
 	@Autowired
-	private GithubPipelineConfigurationRepository githubPipelineConfigurationRepository;
+	private GithubConfigurationRepository githubConfigurationRepository;
+
+	@Autowired
+	private JenkinsConfigurationRepository jenkinsConfigurationRepository;
+
+	@Autowired
+	private PipelineConfigurationRepository pipelineConfigurationRepository;
 
 	@Override
-	public void createPipeline(final GithubConfigurationModel githubConfiguration,
-			final JenkinsConfigurationModel jenkinsConfiguration, final NewPipelineRequest newPipelineRequest)
-			throws PipelineException {
+	public void createPipeline(final NewPipelineRequest newPipelineRequest) throws PipelineException {
 
 		final String pipelineName = newPipelineRequest.getPipelineName();
+		final String javaPackage = newPipelineRequest.getJavaPackage();
+		final int githubConfigurationId = newPipelineRequest.getGithubConfigurationId();
+		final int jenkinsConfigurationId = newPipelineRequest.getJenkinsConfigurationId();
 
 		if (StringUtils.isEmpty(
 				pipelineName)) { throw new IllegalArgumentException("missing required property: pipelineName"); }
 
-		final GithubPipelineConfigurationModel githubPipelineConfiguration = createGithubRepository(githubConfiguration,
-				pipelineName);
+		final Optional<GithubConfigurationModel> githubConfiguration = githubConfigurationRepository
+				.findById(githubConfigurationId);
 
-		// TODO: catch exceptions and roll back previous steps
-		cloneLocalRepository(githubConfiguration, pipelineName);
+		final Optional<JenkinsConfigurationModel> jenkinsConfiguration = jenkinsConfigurationRepository
+				.findById(jenkinsConfigurationId);
 
-		// TODO: catch exceptions and roll back previous steps
-		initializeAndPushToGithub(newPipelineRequest, githubPipelineConfiguration, jenkinsConfiguration);
+		githubConfiguration.orElseThrow(
+				() -> new IllegalArgumentException("invalid githubConfigurationId: " + githubConfigurationId));
 
-		// TODO: catch exceptions and roll back previous steps
-		githubPipelineConfigurationRepository.save(githubPipelineConfiguration);
-	}
-
-	private GithubPipelineConfigurationModel createGithubRepository(final GithubConfigurationModel githubConfiguration,
-			final String pipelineName) throws PipelineException {
+		jenkinsConfiguration.orElseThrow(
+				() -> new IllegalArgumentException("invalid jenkinsConfigurationId: " + jenkinsConfigurationId));
 
 		try {
-
-			return github.createRepository(githubConfiguration, pipelineName);
+			if (github.existsRepository(githubConfiguration.get(), pipelineName)) { throw new IllegalArgumentException(
+					"a Github repository with that name already exists"); }
 		}
 		catch (final GithubException e) {
-
-			logger.error("createPipeline :: GithubException: {}", e.getMessage(), e);
-
-			throw new PipelineException(e);
+			throw new PipelineException("there was a problem communicating with Github");
 		}
+
+		try {
+			if (jenkins.existsJob(jenkinsConfiguration.get(), pipelineName)) { throw new IllegalArgumentException(
+					"a Jenkins job with that name already exists"); }
+		}
+		catch (final JenkinsException e) {
+			throw new PipelineException("there was a problem communicating with Jenkins");
+		}
+
+		doCreatePipeline(pipelineName, javaPackage, githubConfiguration.get(), jenkinsConfiguration.get());
 	}
 
-	private void cloneLocalRepository(final GithubConfigurationModel githubConfiguration, final String pipelineName)
+	private PipelineModel doCreatePipeline(final String pipelineName, final String javaPackage,
+			final GithubConfigurationModel githubConfiguration, final JenkinsConfigurationModel jenkinsConfiguration)
 			throws PipelineException {
 
+		GithubPipelineConfigurationModel githubPipelineConfiguration;
+		JenkinsPipelineConfigurationModel jenkinsPipelineConfigurationModel;
+
 		try {
-
-			gitService.cloneRepository(workingDirectory, githubConfiguration.getCredentials().getUserName(),
-					pipelineName);
+			githubPipelineConfiguration = github.createRepository(githubConfiguration, pipelineName);
 		}
-		catch (final GitException e) {
-
-			logger.error("createPipeline :: git clone :: GitException: {}", e.getMessage(), e);
-
-			try {
-				github.deleteRepository(githubConfiguration, pipelineName); // TODO: move this up higher
-			}
-			catch (GithubException e1) {
-
-				logger.error("createPipeline :: delete github repository :: unable to delete github repository: {}",
-						e.getMessage(), e);
-			}
-
+		catch (final GithubException e) {
+			logger.error("createPipeline :: GithubException: {}", e.getMessage(), e);
 			throw new PipelineException(e);
 		}
-	}
-
-	private void initializeAndPushToGithub(final NewPipelineRequest newPipelineRequest,
-			final GithubPipelineConfigurationModel githubPipelineConfiguration,
-			final JenkinsConfigurationModel jenkinsConfiguration) throws PipelineException {
-
-		final String pipelineName = newPipelineRequest.getPipelineName(); // TODO: add null checking ?
-		final GithubConfigurationModel githubConfiguration = githubPipelineConfiguration.getGithubConfiguration();
 
 		try {
-
-			mavenService.initializeProjectWithMavenArchetype(workingDirectory, newPipelineRequest.getJavaPackage(),
+			gitService.cloneRepository(workingDirectory, githubConfiguration.getCredentials().getUserName(),
 					pipelineName);
+			mavenService.initializeProjectWithMavenArchetype(workingDirectory, javaPackage, pipelineName);
 			gitService.commitAndPush(workingDirectory, pipelineName, githubPipelineConfiguration);
-			jenkins.createMultibranchPipelineJob(jenkinsConfiguration, githubPipelineConfiguration, pipelineName);
+			jenkinsPipelineConfigurationModel = jenkins.createMultibranchPipelineJob(jenkinsConfiguration,
+					githubPipelineConfiguration, pipelineName);
 		}
 		catch (final GitException | MavenException | JenkinsException e) {
-
 			logger.error("createPipeline :: Exception: {}", e.getMessage(), e);
-
-			try {
-				github.deleteRepository(githubConfiguration, pipelineName); // TODO: move this up higher
-			}
-			catch (GithubException e1) {
-
-				logger.error("createPipeline :: delete github repository :: unable to delete github repository: {}",
-						e.getMessage(), e);
-			}
-
+			tryDeleteGithubRepository(pipelineName, githubConfiguration);
 			throw new PipelineException(e);
 		}
 		finally {
-
 			final File localGitRepository = new File(String.format("%s/%s", workingDirectory, pipelineName));
-			removeDirectory(localGitRepository);
+			removeDirectory(localGitRepository); // TODO handle the case of multiple requests with the same name
+			// or maybe move this behind the git or maven service facades
+		}
+
+		final PipelineModel pipeline = new PipelineModel();
+		pipeline.setGithubPipelineConfiguration(githubPipelineConfiguration);
+		pipeline.setJenkins(jenkinsPipelineConfigurationModel);
+		final PipelineModel savedPipeline = pipelineConfigurationRepository.save(pipeline);
+
+		logger.debug("doCreatePipeline :: returning: {}", savedPipeline);
+
+		return savedPipeline;
+	}
+
+	private void tryDeleteGithubRepository(final String pipelineName,
+			final GithubConfigurationModel githubConfiguration) {
+
+		try {
+			github.deleteRepository(githubConfiguration, pipelineName);
+		}
+		catch (GithubException e) {
+
+			logger.error("createPipeline :: delete github repository :: unable to delete github repository: {}",
+					e.getMessage(), e);
 		}
 	}
 
 	private static void removeDirectory(final File dir) {
 
 		if (dir.isDirectory()) {
-			File[] files = dir.listFiles();
+			final File[] files = dir.listFiles();
 			if (files != null && files.length > 0) {
 				for (File aFile : files) {
 					removeDirectory(aFile);
